@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>منصة العبقري - أولى إعدادي</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700;900&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Cairo', sans-serif; background: #f0f4f8; }
+        .option-card { transition: all 0.3s ease; cursor: pointer; }
+        .option-card:hover { transform: scale(1.02); border-color: #4f46e5; }
+        .selected { background-color: #4f46e5 !important; color: white !important; border-color: #3730a3 !important; }
+        .correct { background-color: #10b981 !important; color: white !important; }
+        .wrong { background-color: #ef4444 !important; color: white !important; }
+        @keyframes pulse-timer { 0% { opacity: 1; } 50% { opacity: 0.5; } 100% { opacity: 1; } }
+        .timer-low { color: #ef4444; animation: pulse-timer 1s infinite; font-weight: bold; }
+    </style>
+</head>
+<body class="bg-slate-50 min-h-screen">
+
+    <!-- Header -->
+    <header class="bg-indigo-700 text-white py-6 shadow-lg text-center mb-8">
+        <h1 class="text-3xl font-black">🌟 منصة العبقري للاختبارات التفاعلية 🌟</h1>
+        <p class="mt-2 text-indigo-100 font-bold">اللغة الإنجليزية - الصف الأول الإعدادي - الترم الثاني</p>
+    </header>
+
+    <main class="max-w-4xl mx-auto px-4">
+        
+        <!-- Unit Selection Screen -->
+        <div id="selection-screen" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <!-- Units will be injected here -->
+        </div>
+
+        <!-- Quiz Screen -->
+        <div id="quiz-screen" class="hidden">
+            <div class="bg-white rounded-3xl p-6 shadow-xl border-4 border-indigo-100 relative">
+                <!-- Stats Bar -->
+                <div class="flex justify-between items-center mb-6 border-b pb-4">
+                    <div class="text-indigo-700 font-black" id="unit-title">الوحدة السابعة</div>
+                    <div class="flex items-center gap-4">
+                        <div id="timer" class="text-xl font-mono bg-slate-100 px-4 py-1 rounded-full">10:00</div>
+                        <div id="progress" class="text-slate-500 font-bold">1 / 15</div>
+                    </div>
+                </div>
+
+                <!-- Question -->
+                <div class="mb-8">
+                    <h2 id="question-text" class="text-2xl font-bold text-slate-800 leading-relaxed mb-6 text-left" dir="ltr"></h2>
+                    <div id="options-grid" class="grid grid-cols-1 gap-4" dir="ltr">
+                        <!-- Options will be injected here -->
+                    </div>
+                </div>
+
+                <!-- Actions -->
+                <div class="flex justify-between items-center mt-8">
+                    <button id="next-btn" onclick="nextQuestion()" class="bg-indigo-600 text-white px-8 py-3 rounded-xl font-bold hover:bg-indigo-700 transition disabled:opacity-50" disabled>السؤال التالي ⬅️</button>
+                    <div class="h-2 flex-1 mx-6 bg-slate-100 rounded-full overflow-hidden">
+                        <div id="progress-bar" class="h-full bg-indigo-500 transition-all duration-500" style="width: 0%"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Results Screen -->
+        <div id="results-screen" class="hidden text-center bg-white p-10 rounded-3xl shadow-2xl border-t-8 border-indigo-600">
+            <div id="result-emoji" class="text-7xl mb-4">🏆</div>
+            <h2 class="text-3xl font-black text-slate-800 mb-2">أحسنت يا بطل!</h2>
+            <p id="result-text" class="text-xl text-slate-600 mb-6"></p>
+            <div class="text-6xl font-black text-indigo-600 mb-8" id="final-score">0 / 15</div>
+            
+            <div class="flex flex-col gap-4 max-w-sm mx-auto">
+                <button onclick="showReview()" class="bg-indigo-600 text-white py-4 rounded-2xl font-bold hover:bg-indigo-700 transition">مراجعة الإجابات والتفسير 🧐</button>
+                <button onclick="location.reload()" class="bg-slate-100 text-slate-700 py-4 rounded-2xl font-bold hover:bg-slate-200 transition">اختبار وحدة أخرى 🏠</button>
+            </div>
+        </div>
+
+        <!-- Review Modal -->
+        <div id="review-screen" class="hidden pb-20">
+            <h2 class="text-2xl font-black text-slate-800 mb-6 text-center">تقرير الأداء العبقري</h2>
+            <div id="review-list" class="space-y-6"></div>
+            <button onclick="location.reload()" class="fixed bottom-6 left-1/2 -translate-x-1/2 bg-indigo-900 text-white px-10 py-4 rounded-full shadow-2xl font-bold z-50">العودة للرئيسية</button>
+        </div>
+
+    </main>
+
+    <script>
+        // قاعدة بيانات الأسئلة
+        const quizData = {
+            7: { title: "Unit 7: Reviving Civilization", questions: [
+                { q: "Archaeologists use ............ to find objects under the ground.", opts: ["radars", "spoons", "pencils", "cameras"], ans: 0, exp: "الرادار يُستخدم للكشف عن الأشياء المدفونة تحت الأرض." },
+                { q: "We ............ touch the artifacts in the museum.", opts: ["must", "mustn't", "should", "can"], ans: 1, exp: "يُمنع لمس الآثار في المتاحف للحفاظ عليها." },
+                { q: "The parade of the royal ............ was amazing.", opts: ["mummies", "cars", "toys", "books"], ans: 0, exp: "الموكب كان مخصصاً لنقل المومياوات الملكية." },
+                { q: "You ............ listen to your teacher carefully.", opts: ["mustn't", "shouldn't", "must", "don't"], ans: 2, exp: "يجب (must) اتباع تعليمات المعلم في الفصل." },
+                { q: "The word 'preserve' means to ............ something.", opts: ["destroy", "lose", "protect", "break"], ans: 2, exp: "كلمة preserve تعني يحمي أو يحافظ على." },
+                { q: "A ............ is a building where we see ancient things.", opts: ["theatre", "museum", "hospital", "bank"], ans: 1, exp: "المتحف هو مكان عرض القطع الأثرية القديمة." },
+                { q: "If you want to be healthy, you ............ eat junk food.", opts: ["should", "shouldn't", "must", "can"], ans: 1, exp: "نصيحة بعدم فعل شيء ضار بالصحة (shouldn't)." },
+                { q: "The Great ............ is one of the world's wonders.", opts: ["Temple", "Pyramid", "Park", "Street"], ans: 1, exp: "الهرم الأكبر من عجائب الدنيا السبع." },
+                { q: "We use ............ to build houses in ancient Egypt.", opts: ["plastic", "mud bricks", "paper", "glass"], ans: 1, exp: "المصريون القدماء استخدموا الطوب اللبن في البناء." },
+                { q: "You ............ pay for the ticket before entering.", opts: ["must", "mustn't", "shouldn't", "not"], ans: 0, exp: "دفع التذكرة إلزامي قبل الدخول (must)." },
+                { q: "Cairo is the ............ of Egypt.", opts: ["village", "capital", "island", "river"], ans: 1, exp: "القاهرة هي عاصمة مصر." },
+                { q: "The statues are made of ............ .", opts: ["water", "stone", "cloud", "air"], ans: 1, exp: "التماثيل تُصنع من الحجر." },
+                { q: "People go to the ............ to see fish.", opts: ["aquarium", "planetarium", "market", "school"], ans: 0, exp: "الأكواريوم هو معرض الأحياء المائية." },
+                { q: "Ancient Egypt had a great ............ .", opts: ["civilization", "problem", "pollution", "mistake"], ans: 0, exp: "مصر القديمة كان لديها حضارة عظيمة." },
+                { q: "It's a ............ to cross the road when the light is red.", opts: ["good", "rule", "mistake", "must"], ans: 2, exp: "من الخطأ عبور الطريق والإشارة حمراء." }
+            ]},
+            8: { title: "Unit 8: Family Values", questions: [
+                { q: "My father's sister is my ............ .", opts: ["aunt", "uncle", "mother", "cousin"], ans: 0, exp: "أخت الأب هي العمة (aunt)." },
+                { q: "This pen is ............ ; I bought it yesterday.", opts: ["my", "mine", "me", "I"], ans: 1, exp: "نستخدم mine كضمير ملكية في نهاية الجملة." },
+                { q: "Parents always ............ about their children.", opts: ["hate", "ignore", "care", "forget"], ans: 2, exp: "الوالدان يهتمان (care) بأبنائهم." },
+                { q: "Whose bag is this? It's ............ .", opts: ["Hany", "Hany's", "Hany is", "of Hany"], ans: 1, exp: "نستخدم 's للملكية." },
+                { q: "We should help with the household ............ .", opts: ["games", "chores", "crimes", "sports"], ans: 1, exp: "household chores تعني المهام المنزلية." },
+                { q: "A ............ is a secret plan for a party.", opts: ["memory", "surprise", "habit", "job"], ans: 1, exp: "المفاجأة هي خطة سرية." },
+                { q: "Twins are two children born at the ............ time.", opts: ["different", "same", "long", "old"], ans: 1, exp: "التوأم يولدون في نفس الوقت." },
+                { q: "Can you help me ............ my bed?", opts: ["do", "make", "take", "give"], ans: 1, exp: "التعبير الصحيح هو make the bed." },
+                { q: "That car belongs to ............ .", opts: ["them", "theirs", "their", "they"], ans: 0, exp: "بعد الفعل نستخدم مفعول به (them)." },
+                { q: "Grandparents are very ............ to our family.", opts: ["important", "bad", "lazy", "new"], ans: 0, exp: "الأجداد مهمون جداً للعائلة." },
+                { q: "My brother is very ............ ; he helps everyone.", opts: ["selfish", "helpful", "rude", "angry"], ans: 1, exp: "المساعد للآخرين يسمى helpful." },
+                { q: "Is this book ............ ?", opts: ["you", "your", "yours", "yours'"], ans: 2, exp: "ضمير ملكية للسؤال عن ملكية الشخص (yours)." },
+                { q: "We ............ stories with our cousins.", opts: ["exchange", "break", "lose", "fight"], ans: 0, exp: "نحن نتبادل القصص." },
+                { q: "A ............ school is for students aged 11 to 14.", opts: ["primary", "preparatory", "secondary", "nursery"], ans: 1, exp: "المرحلة الإعدادية (preparatory)." },
+                { q: "Role ............ means what you do in your family.", opts: ["play", "work", "model", "time"], ans: 0, exp: "role play أو دور الفرد." }
+            ]}
+            // يمكن إضافة الوحدات 9، 10، 11، 12 بنفس النمط بسهولة
+        };
+
+        let currentQuiz = [];
+        let currentIdx = 0;
+        let userAnswers = [];
+        let score = 0;
+        let timer;
+        let timeLeft = 600;
+
+        function initSelection() {
+            const grid = document.getElementById('selection-screen');
+            for(let i=7; i<=12; i++) {
+                const card = document.createElement('div');
+                card.className = "bg-white p-8 rounded-3xl shadow-md border-b-8 border-indigo-200 hover:border-indigo-500 transition cursor-pointer group";
+                card.onclick = () => startQuiz(i);
+                card.innerHTML = `
+                    <div class="text-indigo-600 font-black text-sm mb-2">الترم الثاني</div>
+                    <h3 class="text-2xl font-bold text-slate-800 group-hover:text-indigo-600">الوحدة ${i}</h3>
+                    <p class="text-slate-500 mt-2">اختبار شامل (15 سؤال)</p>
+                    <div class="mt-4 inline-block bg-indigo-50 px-4 py-2 rounded-lg text-indigo-700 font-bold group-hover:bg-indigo-600 group-hover:text-white transition">ابدأ الاختبار</div>
+                `;
+                grid.appendChild(card);
+            }
+        }
+
+        function startQuiz(unitId) {
+            const data = quizData[unitId];
+            if(!data) {
+                alert("سيتم إضافة أسئلة هذه الوحدة في التحديث القادم!");
+                return;
+            }
+            currentQuiz = data.questions;
+            document.getElementById('unit-title').innerText = data.title;
+            document.getElementById('selection-screen').classList.add('hidden');
+            document.getElementById('quiz-screen').classList.remove('hidden');
+            currentIdx = 0;
+            score = 0;
+            userAnswers = [];
+            timeLeft = 600;
+            loadQuestion();
+            startTimer();
+        }
+
+        function loadQuestion() {
+            const q = currentQuiz[currentIdx];
+            document.getElementById('question-text').innerText = q.q;
+            document.getElementById('progress').innerText = `${currentIdx + 1} / ${currentQuiz.length}`;
+            document.getElementById('progress-bar').style.width = `${((currentIdx + 1) / currentQuiz.length) * 100}%`;
+            
+            const grid = document.getElementById('options-grid');
+            grid.innerHTML = '';
+            q.opts.forEach((opt, i) => {
+                const btn = document.createElement('div');
+                btn.className = "option-card bg-slate-50 border-2 border-slate-200 p-4 rounded-xl font-bold text-lg hover:bg-white flex items-center gap-4";
+                btn.innerHTML = `<span class="bg-indigo-100 text-indigo-700 w-8 h-8 rounded-full flex items-center justify-center text-sm">${String.fromCharCode(65+i)}</span> ${opt}`;
+                btn.onclick = () => selectOption(i, btn);
+                grid.appendChild(btn);
+            });
+            document.getElementById('next-btn').disabled = true;
+        }
+
+        function selectOption(idx, el) {
+            document.querySelectorAll('.option-card').forEach(c => c.classList.remove('selected'));
+            el.classList.add('selected');
+            userAnswers[currentIdx] = idx;
+            document.getElementById('next-btn').disabled = false;
+        }
+
+        function nextQuestion() {
+            if(currentIdx < currentQuiz.length - 1) {
+                currentIdx++;
+                loadQuestion();
+            } else {
+                finishQuiz();
+            }
+        }
+
+        function startTimer() {
+            timer = setInterval(() => {
+                timeLeft--;
+                let m = Math.floor(timeLeft / 60);
+                let s = timeLeft % 60;
+                const display = document.getElementById('timer');
+                display.innerText = `${m}:${s < 10 ? '0'+s : s}`;
+                if(timeLeft < 60) display.className = "timer-low";
+                if(timeLeft <= 0) finishQuiz();
+            }, 1000);
+        }
+
+        function finishQuiz() {
+            clearInterval(timer);
+            score = 0;
+            userAnswers.forEach((ans, i) => {
+                if(ans === currentQuiz[i].ans) score++;
+            });
+
+            document.getElementById('quiz-screen').classList.add('hidden');
+            document.getElementById('results-screen').classList.remove('hidden');
+            document.getElementById('final-score').innerText = `${score} / ${currentQuiz.length}`;
+            
+            const perc = (score / currentQuiz.length) * 100;
+            const resultText = document.getElementById('result-text');
+            const emoji = document.getElementById('result-emoji');
+            
+            if(perc >= 85) {
+                resultText.innerText = "أنت عبقري حقيقي! استمر في هذا التألق.";
+                emoji.innerText = "👑";
+            } else if(perc >= 60) {
+                resultText.innerText = "أداء رائع، ينقصك القليل لتصل للقمة.";
+                emoji.innerText = "🌟";
+            } else {
+                resultText.innerText = "لا بأس، راجع أخطاءك وحاول مرة أخرى لتتفوق.";
+                emoji.innerText = "📚";
+            }
+        }
+
+        function showReview() {
+            document.getElementById('results-screen').classList.add('hidden');
+            document.getElementById('review-screen').classList.remove('hidden');
+            const list = document.getElementById('review-list');
+            list.innerHTML = '';
+
+            currentQuiz.forEach((q, i) => {
+                const item = document.createElement('div');
+                const isCorrect = userAnswers[i] === q.ans;
+                item.className = `bg-white p-6 rounded-2xl shadow border-l-8 ${isCorrect ? 'border-green-500' : 'border-red-500'}`;
+                item.innerHTML = `
+                    <p class="font-bold text-lg mb-2" dir="ltr">${i+1}. ${q.q}</p>
+                    <div class="flex flex-col gap-1 text-sm mb-3">
+                        <span class="${isCorrect ? 'text-green-600' : 'text-red-600'}">إجابتك: ${q.opts[userAnswers[i]] || 'لم يتم الإجابة'}</span>
+                        <span class="text-green-600 font-bold">الإجابة الصحيحة: ${q.opts[q.ans]}</span>
+                    </div>
+                    <div class="bg-indigo-50 p-3 rounded-lg text-indigo-800 text-sm">
+                        <strong>💡 التفسير:</strong> ${q.exp}
+                    </div>
+                `;
+                list.appendChild(item);
+            });
+        }
+
+        initSelection();
+    </script>
+</body>
+</html>
